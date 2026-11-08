@@ -7,4 +7,6 @@ set -euo pipefail
 for v in $(compgen -e | grep '^THREADBARE_' || true); do n="THREADBEAR_${v#THREADBARE_}"; [ -n "${!n+x}" ] || export "$n=${!v}"; done
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 NODE="${THREADBEAR_NODE:-$HOME/.nvm/versions/node/v24.22.1/bin/node}"
+# Not on Mike's Mac (no nvm Node 24 there): use the node on PATH, as dev-app.sh does.
+[ -n "${THREADBEAR_NODE:-}" ] || [ -x "$NODE" ] || NODE="$(command -v node || printf '%s' "$NODE")"
 exec "$NODE" --test --test-reporter=spec --test-concurrency=1 test/deploy/*.test.ts

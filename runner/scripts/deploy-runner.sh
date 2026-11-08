@@ -15,6 +15,8 @@ set -euo pipefail
 # THREADBARE_* was the old name for these variables: each stands in for its new name.
 for v in $(compgen -e | grep '^THREADBARE_' || true); do n="THREADBEAR_${v#THREADBARE_}"; [ -n "${!n+x}" ] || export "$n=${!v}"; done
 NODE="${THREADBEAR_NODE:-$HOME/.nvm/versions/node/v24.22.1/bin/node}"
+# Not on Mike's Mac (no nvm Node 24 there): use the node on PATH, as dev-app.sh does.
+[ -n "${THREADBEAR_NODE:-}" ] || [ -x "$NODE" ] || NODE="$(command -v node || printf '%s' "$NODE")"
 if [ ! -x "$NODE" ]; then
   echo "No Node binary at $NODE. Set THREADBEAR_NODE to a Node 24 binary." >&2
   exit 1

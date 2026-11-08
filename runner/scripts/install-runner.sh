@@ -63,6 +63,8 @@ DEFAULT_LABEL="com.mikerosoft.threadbear.runner"
 DEFAULT_HOME="$HOME/Library/Application Support/Threadbear"
 RUNNER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 NODE="${THREADBEAR_NODE:-$HOME/.nvm/versions/node/v24.22.1/bin/node}"
+# Not on Mike's Mac (no nvm Node 24 there): use the node on PATH, as dev-app.sh does.
+[ -n "${THREADBEAR_NODE:-}" ] || [ -x "$NODE" ] || NODE="$(command -v node || printf '%s' "$NODE")"
 LAUNCHCTL="${THREADBEAR_LAUNCHCTL:-launchctl}"
 AGENTS_DIR="${THREADBEAR_LAUNCH_AGENTS_DIR:-$HOME/Library/LaunchAgents}"
 # A runner on Linux (INSTALL.md, "A runner on Linux"): systemd keeps it up.
