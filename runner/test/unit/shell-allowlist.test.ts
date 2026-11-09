@@ -824,8 +824,15 @@ test("R5: a repo's filter drivers don't run: its own are refused, and your own d
   write(repo, { '.gitattributes': '* filter=x\n', 'a.txt': 'one\n' });
   git(repo, 'add', 'a.txt', '.gitattributes');
   git(repo, 'commit', '-qm', 'two');
+  const index = path.join(repo, '.git/index');
   fs.rmSync(marker, { force: true });
-  fs.appendFileSync(path.join(repo, 'a.txt'), 'two\n');
+  fs.writeFileSync(path.join(repo, 'a.txt'), 'two\n');
+  // Equal-size content with a deliberately old mtime makes Git hash the
+  // worktree file; a future index time keeps the index out of its racy path.
+  const old = new Date('2000-01-01T00:00:00Z');
+  const future = new Date('2030-01-01T00:00:00Z');
+  fs.utimesSync(path.join(repo, 'a.txt'), old, old);
+  fs.utimesSync(index, future, future);
   const env: Record<string, string | undefined> = { ...process.env, GIT_CONFIG_GLOBAL: global };
   const e = { ...env, ...liveCommandEnv(env) } as NodeJS.ProcessEnv;
   for (const cmd of ['git merge-base --is-ancestor HEAD HEAD', 'git rev-list --count HEAD', "git branch -a --no-merged HEAD --format='%(refname:short)'"]) {

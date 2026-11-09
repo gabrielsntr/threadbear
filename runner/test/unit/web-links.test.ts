@@ -120,19 +120,21 @@ test('one long line of unclosed work links is read in one pass', () => {
 });
 
 test('a page full of long rows and links has a bounded cost', () => {
-  // The worst a page of 80 rows can be: 40 rows of the 8,000 characters the
-  // mirror keeps that every search reads to the end, then 40 messages of as
-  // many different links as fit.
+  // A full page of long rows can spend at most the scan budget, regardless
+  // of how many different links point into it. Check that contract directly:
+  // a real quote resolves before misses consume the page budget, then the
+  // same uncached quote is shown as plain text after the budget is spent.
   const page: { seq: number; role: 'user' | 'assistant' | 'tool'; text: string }[] = [{ seq: 0, role: 'user', text: 'Go' }];
   for (let i = 1; i <= 40; i++) page.push({ seq: i, role: 'tool', text: 'z '.repeat(4000) });
-  for (let i = 41; i <= 80; i++) page.push({ seq: i, role: 'assistant', text: '' });
-  let found = 0;
-  const ms = cpuMs(() => {
-    for (let m = 41; m <= 80; m++) for (let l = 0; l < 700; l++) if (findStep(`z q${m}-${l}`, m, page) !== undefined) found++;
-  });
-  assert.equal(found, 0);
-  assert.ok(ms < 100, `took ${ms.toFixed(0)} ms`);
-  // Links that do find their step still do, on a fresh page.
+  for (let i = 41; i <= 79; i++) page.push({ seq: i, role: 'assistant', text: '' });
+  page.push({ seq: 80, role: 'assistant', text: 'Run the bounded scan check' });
+  page.push({ seq: 81, role: 'assistant', text: '' });
+  page.push({ seq: 82, role: 'assistant', text: '' });
+
+  assert.equal(findStep('bounded scan check', 81, page), 80);
+  for (let i = 0; i < 7; i++) assert.equal(findStep(`missing-${i}`, 81, page), undefined);
+  assert.equal(findStep('bounded scan check', 82, page), undefined);
+  // Ordinary links still resolve on a fresh page.
   assert.equal(findStep('Run the tests', 9, [...rows]), 5);
 });
 
