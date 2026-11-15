@@ -409,14 +409,16 @@ struct PictureOnMac: View {
 /// A picture an agent or another Mac wrote as a web address, which isn't one
 /// of the thread's stored pictures: the app never fetches it, as the address
 /// could be anyone's server or one on Mike's own network (Daybreak findings
-/// 129 and 133). A tap opens it through the thread's links, like any other.
+/// 129 and 133). A tap opens it through the thread's links, like any other:
+/// a `Link` goes through the view's link handler, which ends in LinkGate,
+/// where calling `openURL` here would hand it on without the thread's say
+/// (OpenGateSourceTests).
 struct WebPictureLink: View {
     var alt: String
     var url: URL
-    @Environment(\.openURL) private var openURL
 
     var body: some View {
-        Button { openURL(url) } label: {
+        Link(destination: url) {
             PictureOnMac(alt: alt, note: "Picture on \(url.host() ?? "the web"), not loaded. Tap to open it.")
         }
         .buttonStyle(.plain)
